@@ -1,6 +1,7 @@
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using StarChart.Data;
+using StarChart.Models;
 
 namespace StarChart.Controllers
 {
@@ -53,6 +54,58 @@ namespace StarChart.Controllers
             }
 
             return Ok(celestialObjects);
+        }
+
+        [HttpPost]
+        public IActionResult Create([FromBody] CelestialObject celestialObject)
+        {
+            _context.CelestialObjects.Add(celestialObject);
+            _context.SaveChanges();
+            return CreatedAtRoute("GetById", new { Id = celestialObject.Id });
+        }
+
+        [HttpPut("{id}")]
+        public IActionResult Update(int id, [FromBody] CelestialObject celestialObject)
+        {
+            var celestialObjectInDB = _context.CelestialObjects.Find(id);
+            if (celestialObjectInDB == null)
+                return NotFound();
+
+            celestialObjectInDB.Name = celestialObject.Name;
+            celestialObjectInDB.OrbitalPeriod = celestialObject.OrbitalPeriod;
+            celestialObjectInDB.OrbitedObjectId = celestialObject.OrbitedObjectId;
+
+            _context.CelestialObjects.Update(celestialObjectInDB);
+            _context.SaveChanges();
+
+            return NoContent();
+        }
+
+        [HttpPatch("{id}/{name}")]
+        public IActionResult RenameObject(int id, string name)
+        {
+            var celestialObjectInDB = _context.CelestialObjects.Find(id);
+            if (celestialObjectInDB == null)
+                return NotFound();
+
+            celestialObjectInDB.Name = name;
+            _context.CelestialObjects.Update(celestialObjectInDB);
+            _context.SaveChanges();
+
+            return NoContent();
+        }
+
+        [HttpDelete("{id}")]
+        public IActionResult Delete(int id)
+        {
+            var celestialObjects = _context.CelestialObjects.Where(e => e.OrbitedObjectId == id).ToList();
+            if (celestialObjects == null)
+                return NotFound();
+
+            _context.CelestialObjects.RemoveRange(celestialObjects);
+            _context.SaveChanges();
+
+            return NoContent();
         }
     }
 }
